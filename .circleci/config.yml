@@ -165,7 +165,6 @@ jobs:
       - checkout
       - add_ssh_keys:
           fingerprints: ["12:76:e5:bd:f0:94:9b:22:b5:40:66:e4:f1:61:6d:1e"]
-
       - persist_to_workspace:
           root: ~/
           paths: 
@@ -199,10 +198,13 @@ workflows:
       # - scan-backend:
       #     requires: [Build-Backend]
       - deploy-infrastructure:
-          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+          # requires: [test-frontend, test-backend, scan-frontend, scan-backend]
           filters:
             branches:
               only: master
-      - configure-infrastructure:
+      - configure_infrastructure:
           requires: [deploy-infrastructure]
+          filters:
+            branches:
+              only: master
 
