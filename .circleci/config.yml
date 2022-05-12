@@ -105,7 +105,7 @@ jobs:
     steps:
       - checkout 
       - run:
-          name: "install Tar"
+          name: "install Tar and gzip "
           command: yum install -y tar gzip
       - run:
           name: Create Back-end Infra
