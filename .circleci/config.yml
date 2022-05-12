@@ -3,8 +3,13 @@ orbs:
   aws-cli: circleci/aws-cli@2.0.3
 commands:
 
+  install_awscli:
+    steps:
+      - run: install AWS-cli
+      - command: |
+       
 
-
+  
   print_pipeline_id:
     parameters:
       id: 
@@ -161,14 +166,13 @@ jobs:
   configure_infrastructure: 
     docker:
       - image: python:3.7-alpine3.11
+
     steps:
       - checkout
       - add_ssh_keys:
           fingerprints: ["12:76:e5:bd:f0:94:9b:22:b5:40:66:e4:f1:61:6d:1e"]
-      - persist_to_workspace:
-          root: ~/
-          paths: 
-            - project/.circleci/ansible/inventory.txt
+      - attach_workspace:
+          at: ~/
       - run:
           name: Install dependencies
           command: |
@@ -180,7 +184,8 @@ jobs:
       - run:
           name: Configure server
           command: |
-            ansible-playbook -i ansible/inventory.txt ansible/configure-server.yml
+            cd .corcleci/ansible
+            ansible-playbook -i inventory.txt configure-server.yml
       - destroy_environment
 
 
