@@ -126,11 +126,11 @@ jobs:
       - run:
           name: Fetch the public IP of  EC2  and append it to inventory
           command: |
-            backend-ip=$(aws ec2 describe-instances \ 
-            --filters "Name=teg:Name,Values=Back-End-${CIRCLE_WORKFLOW_ID:0:7}" \ 
+            BE_IP=$(aws ec2 describe-instances \
+            --filters Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7} \
             --query 'Reservations[*].Instances[*].PublicIpAddress' \
             --output text)
-            echo $backend-ip >> .circleci/ansiable/inventory.txt
+            echo $BE_IP >> .circleci/ansiable/inventory.txt
             cat .circleci/ansiable/inventory.txt
       - persist_to_workspace:
           root: ~/
