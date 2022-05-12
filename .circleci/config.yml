@@ -1,6 +1,25 @@
 version: 2.1
 orbs:
   aws-cli: circleci/aws-cli@2.0.3
+commands:
+
+
+
+  print_pipeline_id:
+    parameters:
+      id: 
+        type: string
+    steps:
+      - run: echo << parameters.id >>
+
+  destroy_environment:
+    steps:
+      - run:
+          name: Destroy environment
+          when: on_fail
+          command: |
+            aws cloudformation delete-stack --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7} 
+            aws cloudformation delete-stack --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}
 
 jobs:
 # FRONTEND
@@ -105,7 +124,7 @@ jobs:
     steps:
       - checkout 
       - run:
-          name: "install Tar and gzip "
+          name: "install Tar"
           command: yum install -y tar gzip
       - run:
           name: Create Back-end Infra
@@ -123,20 +142,22 @@ jobs:
             --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}" \
             --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  \
             --tags project=udapeople
-      # - run:
-      #     name: Fetch the public IP of  EC2  and append it to inventory
-      #     command: |
-      #       BE_IP=$(aws ec2 describe-instances \
-      #       --filters Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7} \
-      #       --query 'Reservations[*].Instances[*].PublicIpAddress' \
-      #       --output text)
-      #       echo $BE_IP >> .circleci/ansible/inventory.txt
-      #       cat .circleci/ansible/inventory.txt
+      - run:
+          name: Fetch the public IP of  EC2  and append it to inventory
+          command: |
+            BE_IP=$(aws ec2 describe-instances \
+            --filters Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7} \
+            --query 'Reservations[*].Instances[*].PublicIpAddress' \
+            --output text)
+            echo $BE_IP >> .circleci/ansible/inventory.txt
+            cat .circleci/ansible/inventory.txt
+      - run: return 1
+      - destroy_environment
             
-      # - persist_to_workspace:
-      #     root: ~/
-      #     paths:
-      #       - project/.circleci/ansible/inventory.txt
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - project/.circleci/ansible/inventory.txt
 
 
 workflows:
