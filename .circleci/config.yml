@@ -1,4 +1,7 @@
 version: 2.1
+orbs:
+  aws-cli: circleci/aws-cli@2.0.3
+
 jobs:
 # FRONTEND
   Build-Frontend:
@@ -66,8 +69,6 @@ jobs:
       - save_cache:
           paths: [backend/node_modules]
           key: backend-build
-
-
   test-backend:
     docker:
       - image: circleci/node:13.8.0
@@ -81,7 +82,6 @@ jobs:
             cd backend
             npm install
             npm run test
-
   scan-backend:
     docker:
       - image: circleci/node:13.8.0
@@ -97,7 +97,46 @@ jobs:
               npm audit fix --audit-level=critical --force
               npm audit fix --force
               npm audit --audit-level=critical
-      
+
+#CD Part
+  deploy-infrastructure:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout 
+      - run:
+          name: "install Tar"
+          command: yum install -y tar gzip
+      - run:
+          name: Create Back-end Infra
+          command: |
+            aws cloudformation deploy \
+            --template-file .circleci/files/backend.yml \
+            --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+            --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  \
+            --tags project=udapeople
+      - run:
+          name: creating Front-End infra
+          command: |
+            aws cloudformation deploy \
+            --template-file .circleci/files/frontend.yml \
+            --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}" \
+            --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  \
+            --tags project=udapeople
+      - run:
+          name: Fetch the public IP of  EC2  and append it to inventory
+          command: |
+            backend-ip=$( aws ec2 describe-instances \ 
+            --filters "Name=teg:Name,Values=Back-End-${CIRCLE_WORKFLOW_ID:0:7}" \ 
+            --query 'Reservations[*].Instances[*].PublicIpAddress' \
+            --output text)
+            echo $backend-ip >> .circleci/ansiable/inventory.txt
+            cat .circleci/ansiable/inventory.txt
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - fwd-3rd-Proj/.circleci/ansible/inventory.txt
+
 
 workflows:
   default:
@@ -112,5 +151,9 @@ workflows:
           requires: [Build-Backend]
       - scan-backend:
           requires: [Build-Backend]
-
+      - deploy-infrastructure:
+          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+          filters:
+            branches:
+              only: master
 
