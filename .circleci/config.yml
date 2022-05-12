@@ -133,10 +133,10 @@ jobs:
             echo $BE_IP >> .circleci/ansible/inventory.txt
             cat .circleci/ansible/inventory.txt
             pwd 
-      # - persist_to_workspace:
-      #     root: ~/
-      #     paths:
-      #       - fwd-3rd-Proj/.circleci/ansible/inventory.txt
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - project/.circleci/ansible/inventory.txt
 
 
 workflows:
