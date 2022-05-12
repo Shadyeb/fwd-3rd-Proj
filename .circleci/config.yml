@@ -17,7 +17,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: "Build Bront-end"
+          name: "Build Back-end"
           command: |
             cd backend/
             npm install
