@@ -158,48 +158,51 @@ jobs:
           root: ~/
           paths:
             - project/.circleci/ansible/inventory.txt
+  configure_infrastructure: 
+    docker:
+      - image: python:3.7-alpine3.11
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints: ["12:76:e5:bd:f0:94:9b:22:b5:40:66:e4:f1:61:6d:1e"]
 
-  # configure-infrastructure:
-  #   docker:
-  #       - image: python:3.7-alpine3.11
-  #     # Add ssh keys with fingerprint
-  #     # attach workspace
-  #   steps:
-  #     - checkout
-  #     - add_ssh_keys: 
-  #          fingerprints: ["12:76:e5:bd:f0:94:9b:22:b5:40:66:e4:f1:61:6d:1e"]
-  #     - run:
-  #         name: Install dependencies
-  #         command: |
-  #           cd /usr/src/app
-  #           apk add nodejs-current
-  #           apk add nodejs-npm
-  #           npm install pm2 -g
-  #           apk add --upgrade bash ansible openssh-client
+      - persist_to_workspace:
+          root: ~/
+          paths: 
+            - project/.circleci/ansible/inventory.txt
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --update ansible 
+      - run: 
+          name: upgrade openssh
+          command: |
+            apk add --upgrade bash ansible openssh-client
+      - run:
+          name: Configure server
+          command: |
+            ansible-playbook -i ansible/inventory.txt configure-server.yml
+     
 
-  #     - run:
-  #         name: Configure server
-  #         command: |
-  #           ansible-playbook -i inventory.txt main-remote.yml
-
-  #     # Here's where you will add some code to rollback on failure   
 
 workflows:
   default:
     jobs:
-      - Build-Frontend
-      - Build-Backend
-      - test-frontend:
-          requires: [Build-Frontend]
-      - scan-frontend:
-          requires: [Build-Frontend]
-      - test-backend:
-          requires: [Build-Backend]
-      - scan-backend:
-          requires: [Build-Backend]
+      # - Build-Frontend
+      # - Build-Backend
+      # - test-frontend:
+      #     requires: [Build-Frontend]
+      # - scan-frontend:
+      #     requires: [Build-Frontend]
+      # - test-backend:
+      #     requires: [Build-Backend]
+      # - scan-backend:
+      #     requires: [Build-Backend]
       - deploy-infrastructure:
           requires: [test-frontend, test-backend, scan-frontend, scan-backend]
           filters:
             branches:
               only: master
+      - configure-infrastructure:
+          requires: [deploy-infrastructure]
 
