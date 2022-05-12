@@ -126,7 +126,7 @@ jobs:
       - run:
           name: Fetch the public IP of  EC2  and append it to inventory
           command: |
-            backend-ip=$( aws ec2 describe-instances \ 
+            backend-ip=$(aws ec2 describe-instances \ 
             --filters "Name=teg:Name,Values=Back-End-${CIRCLE_WORKFLOW_ID:0:7}" \ 
             --query 'Reservations[*].Instances[*].PublicIpAddress' \
             --output text)
@@ -141,18 +141,18 @@ jobs:
 workflows:
   default:
     jobs:
-      - Build-Frontend
-      - Build-Backend
-      - test-frontend:
-          requires: [Build-Frontend]
-      - scan-frontend:
-          requires: [Build-Frontend]
-      - test-backend:
-          requires: [Build-Backend]
-      - scan-backend:
-          requires: [Build-Backend]
+      # - Build-Frontend
+      # - Build-Backend
+      # - test-frontend:
+      #     requires: [Build-Frontend]
+      # - scan-frontend:
+      #     requires: [Build-Frontend]
+      # - test-backend:
+      #     requires: [Build-Backend]
+      # - scan-backend:
+      #     requires: [Build-Backend]
       - deploy-infrastructure:
-          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+          # requires: [test-frontend, test-backend, scan-frontend, scan-backend]
           filters:
             branches:
               only: master
