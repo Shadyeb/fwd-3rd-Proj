@@ -26,6 +26,7 @@ jobs:
       - checkout
       - restore_cache:
           keys: [frontend-build]
+      - name: "Run Frontend Test"
       - run:
           command: |
             cd frontend
@@ -57,6 +58,7 @@ jobs:
       - checkout
       - restore_cache:
           keys: [backend-build]
+      - name: "Run Backend Test"
       - run:
           command: |
             cd backend
