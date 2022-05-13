@@ -1,10 +1,8 @@
 ---
-- name: Extract backend files
-  become: true
-  shell: |
-    tar -vxf artifact.tar.gz
- 
-
+- name: This is an unarchive task
+  unarchive:
+    src: ~/project/artifact.tar.gz
+    dest: /
 - name: "update apt packages."
   become: true
   apt:
@@ -35,6 +33,8 @@
     global: yes
     production: yes
     state: present
+
+
 
 - name: PM2 start backend
   become: true  
