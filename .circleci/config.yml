@@ -4,22 +4,38 @@ orbs:
 commands:
 
 
-  
-  print_pipeline_id:
-    parameters:
-      id: 
-        type: string
-    steps:
-      - run: echo << parameters.id >>
+  # print_pipeline_id:
+  #   parameters:
+  #     id: 
+  #       type: string
+  #   steps:
+  #     - run: echo << parameters.id >>
 
   destroy_environment:
     steps:
       - run:
-          name: Destroy environment
+          name: Destroy environment if any fail 
           when: on_fail
           command: |
             aws cloudformation delete-stack --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7} 
             aws cloudformation delete-stack --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}
+            aws s3 rm s3://udapeople-<<parameters.workflowID>> --recursive
+
+  revert-migrations:
+    steps:
+     - run:
+        name: rollback migrations
+        when: on_fail
+        command: |
+  
+          SUCCESS=$(curl --insecure  https://kvdb.io/CqU5Sjda4N7pmGX6P4d94R/migration_<< parameters.workflowID >>)
+          if(( $SUCCESS==1 )); 
+          then
+            cd ~/project/backend
+            npm install
+            npm run migration:revert
+          fi
+
 
 jobs:
 # FRONTEND
@@ -264,6 +280,7 @@ jobs:
             aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
 
       - destroy_environment
+      - revert-migrations 
   
   deploy-backend:
     docker:
@@ -309,12 +326,13 @@ jobs:
           name: deploy backend
           command: |
             export ANSIBLE_HOST_KEY_CHECKING=False
-            cd .circleci/ansible
+            
             cat inventory.txt
             pwd
-            ansible-playbook -i inventory.txt deploy-backend.yml
+            ansible-playbook -i .circleci/ansible/inventory.txt .circleci/ansible/deploy-backend.yml
 
       - destroy_environment
+      - revert-migrations 
 
       
 
