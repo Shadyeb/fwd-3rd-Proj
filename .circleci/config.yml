@@ -22,6 +22,9 @@ commands:
             aws s3 rm s3://udapeople-<<parameters.workflowID>> --recursive
 
   revert-migrations:
+    parameters:
+      workflowID:
+        type: string 
     steps:
      - run:
         name: rollback migrations
@@ -280,7 +283,8 @@ jobs:
             aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
 
       - destroy_environment
-      - revert-migrations 
+      - revert-migrations:
+          workflowID: ${CIRCLE_WORKFLOW_ID:0:7}    
   
   deploy-backend:
     docker:
@@ -332,7 +336,9 @@ jobs:
             ansible-playbook -i .circleci/ansible/inventory.txt .circleci/ansible/deploy-backend.yml
 
       - destroy_environment
-      - revert-migrations 
+      - revert-migrations:
+          workflowID: ${CIRCLE_WORKFLOW_ID:0:7}      
+
 
       
 
