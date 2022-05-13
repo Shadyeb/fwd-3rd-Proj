@@ -277,14 +277,7 @@ jobs:
       - run:
           name: Install dependencies pip and node 
           command: |
-            apk add --no-cache \
-            py3-pip \
-            && pip3 install --upgrade pip \
-            && pip3 install --no-cache-dir \
-            awscli \
-            && rm -rf /var/cache/apk/*
-            apk --update --no-cache upgrade 
-            apk add nodejs npm
+            apk add --update ansible nodejs npm tar gzip
       - run:
           name: Install Ansible 
           command: |
@@ -292,7 +285,7 @@ jobs:
             apk add --upgrade bash ansible openssh-client
    
       - run:
-          name: Deploy backend
+          name: prepare backend
           command: |
             cd backend
             npm install
