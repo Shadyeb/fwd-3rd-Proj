@@ -166,7 +166,6 @@ jobs:
   configure_infrastructure: 
     docker:
       - image: python:3.7-alpine3.11
-
     steps:
       - checkout
       - add_ssh_keys:
@@ -177,7 +176,6 @@ jobs:
           name: Install AwsCLI
           command: |
             apk add --no-cache \
-            python3 \
             py3-pip \
             && pip3 install --upgrade pip \
             && pip3 install --no-cache-dir \
@@ -231,7 +229,6 @@ jobs:
           name: Install AwsCLI
           command: |
             apk add --no-cache \
-            python3 \
             py3-pip \
             && pip3 install --upgrade pip \
             && pip3 install --no-cache-dir \
@@ -252,7 +249,6 @@ jobs:
           command: |
             apk --update --no-cache upgrade 
             apk add nodejs npm 
-            
           
       - run:
           name: Get backend url
@@ -273,6 +269,47 @@ jobs:
             aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
 
       - destroy_environment
+  
+  deploy-backend:
+    docker:
+      - image: python:3.7-alpine3.11
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints: ["12:76:e5:bd:f0:94:9b:22:b5:40:66:e4:f1:61:6d:1e"]
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --no-cache \
+            py3-pip \
+            && pip3 install --upgrade pip \
+            && pip3 install --no-cache-dir \
+            awscli \
+            && rm -rf /var/cache/apk/*
+      - run:
+          name: Install Ansible 
+          command: |
+            apk add --update ansible 
+            apk add --upgrade bash ansible openssh-client
+
+      - run:
+          name: Deploy backend
+          command: |
+            cd backend
+            npm i
+            npm run build
+            cd ..
+            tar -C backend -czvf artifact.tar.gz .
+            cd .circleci/ansible
+            echo "Contents  of the inventory.txt file is -------"
+            cat inventory.txt
+            ansible-playbook -i inventory.txt deploy-backend.yml
+
+      - destroy_environment
+
+      
 
 workflows:
   default:

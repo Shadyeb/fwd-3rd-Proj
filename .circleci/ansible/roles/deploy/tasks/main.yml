@@ -1,0 +1,50 @@
+---
+- name: Extract backend files
+  become: yes
+  shell: |
+    cd ~/project
+    tar -vxf artifact.tar.gz
+ 
+
+- name: "update apt packages."
+  become: true
+  apt:
+    update_cache: yes
+
+- name: "upgrade packages"
+  become: true
+  apt:
+    upgrade: yes
+
+
+- name: remove dependencies that are no longer required
+  become: true
+  apt:
+    autoremove: yes
+
+- name: "install dependencies."
+  become: true
+  apt:
+    name: ["nodejs", "npm"]
+    state: latest
+    update_cache: yes
+
+- name: "install pm2"
+  become: true
+  npm:
+    name: pm2
+    global: yes
+    production: yes
+    state: present
+
+- name: PM2 start backend
+  become: true  
+  command: pm2 start npm --name "backend" -- run start
+
+- name: PM2 check backend status in pm2
+  become: true
+  command: pm2 status
+ 
+- name: PM2 start main
+  become: true
+  command: pm2 start main.js --update-env
