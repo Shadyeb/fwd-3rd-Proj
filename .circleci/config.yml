@@ -293,7 +293,12 @@ jobs:
           command: |
             apk add --update ansible 
             apk add --upgrade bash ansible openssh-client
-
+      - run: 
+          name: install LTS Node
+          command: |
+            apk --update --no-cache upgrade 
+            apk add nodejs npm 
+            
       - run:
           name: Deploy backend
           command: |
