@@ -4,12 +4,7 @@ orbs:
 commands:
 
 
-  # print_pipeline_id:
-  #   parameters:
-  #     id: 
-  #       type: string
-  #   steps:
-  #     - run: echo << parameters.id >>
+
 
   destroy_environment:
     parameters:
@@ -110,6 +105,9 @@ jobs:
       - save_cache:
           paths: [backend/node_modules]
           key: backend-build
+      - save_cache:
+          paths: [backend/dist]
+          key: backend-dist
   test-backend:
     docker:
       - image: circleci/node:13.8.0
@@ -180,45 +178,56 @@ jobs:
           root: ~/
           paths:
             - project/.circleci/ansible/inventory.txt
+
+
   configure_infrastructure: 
     docker:
       - image: python:3.7-alpine3.11
+        environment:
+            ANSIBLE_HOST_KEY_CHECKING: "no"
     steps:
       - checkout
       - add_ssh_keys:
           fingerprints: ["12:76:e5:bd:f0:94:9b:22:b5:40:66:e4:f1:61:6d:1e"]
+
       - attach_workspace:
           at: ~/
-      - run:
-          name: Install AwsCLI
-          command: |
-            apk add --no-cache \
-            py3-pip \
-            && pip3 install --upgrade pip \
-            && pip3 install --no-cache-dir \
-            awscli \
-            && rm -rf /var/cache/apk/*
+
       - run:
           name: Install dependencies
           command: |
-            apk add --update ansible 
-      - run: 
-          name: upgrade openssh
-          command: |
-            apk add --upgrade bash ansible openssh-client
+            apk add curl
+            apk add --upgrade bash
+            apk add --update ansible
+            apk add openssh-client
+            pip3 install awscli
+
+  
+
       - run:
           name: Configure server
           command: |
             cd .circleci/ansible
             ansible-playbook -i inventory.txt configure-server.yml
+
       - destroy_environment:
           workflowID: ${CIRCLE_WORKFLOW_ID:0:7}  
   
   run-migrations:
     docker:
-      - image: doctrine/nodejs-aws-cli
+      - image: circleci/node:13.8.0
     steps:
       - checkout
+      - restore_cache:
+          keys: [backend-build]
+
+      - run:
+          name: Install aws dependencies
+          command: |
+            sudo apt update && sudo apt install -yy less
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
 
       - run:
           name: Run migrations
@@ -241,45 +250,34 @@ jobs:
 
   deploy-frontend:
     docker:
-     - image: python:3.7-alpine3.11
+      - image: circleci/node:13.8.0
     steps:
       - checkout 
+
       - attach_workspace:
           at: ~/
+
       - run: 
           name: Install AwsCLI
           command: |
-            apk add --no-cache \
-            py3-pip \
-            && pip3 install --upgrade pip \
-            && pip3 install --no-cache-dir \
-            awscli \
-            && rm -rf /var/cache/apk/*
-      - run:
-          name: Install dependencies
-          command: |
-            apk add --update ansible 
-            apk update 
-            apk upgrade
-      - run: 
-          name: upgrade openssh
-          command: |
-            apk add --upgrade bash ansible openssh-client
-      - run: 
-          name: install LTS Node
-          command: |
-            apk --update --no-cache upgrade 
-            apk add nodejs npm 
+            sudo apt update && sudo apt install -yy less
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+      
           
       - run:
           name: Get backend url
           command: |
             export BE_IP=$(aws ec2 describe-instances \
-            --filters Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7} \
-            --query 'Reservations[*].Instances[*].PublicIpAddress' \
-            --output text)
+              --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --output text)
+            
             export API_URL="http://${BE_IP}:3030"
-            echo "${API_URL}"
+            echo "API_URL = ${API_URL}"
+            echo API_URL="http://${BE_IP}:3030" >> frontend/.env
+            cat frontend/.env
       - run:
           name: Deploy frontend objects
           command: |
@@ -310,20 +308,16 @@ jobs:
       - run: 
           name: Install AwsCLI
           command: |
-            apk add --no-cache \
-            py3-pip \
-            && pip3 install --upgrade pip \
-            && pip3 install --no-cache-dir \
-            awscli \
-            && rm -rf /var/cache/apk/*
+            sudo apt update && sudo apt install -yy less
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
 
       - run:
-          name: Install dependencies 
+          name: Install dependencies
           command: |
             apk add --update ansible nodejs npm tar gzip
-            apk add --upgrade bash openssh-client
-            apk add curl
-   
+
    
       - run:
           name: prepare backend
@@ -339,7 +333,6 @@ jobs:
           name: deploy backend
           command: |
             export ANSIBLE_HOST_KEY_CHECKING=False
-            
             ansible-playbook -i .circleci/ansible/inventory.txt .circleci/ansible/deploy-backend.yml
 
       - destroy_environment:
@@ -394,7 +387,6 @@ jobs:
       - revert-migrations:
           workflowID: ${CIRCLE_WORKFLOW_ID:0:7}   
 
-
   cloudfront-update:
     docker:
       - image: amazon/aws-cli
@@ -429,8 +421,6 @@ jobs:
      
       - revert-migrations:
           workflowID: ${CIRCLE_WORKFLOW_ID:0:7}  
-
-
 
   cleanup:
     docker:
