@@ -272,17 +272,27 @@ jobs:
       - checkout
       - add_ssh_keys:
           fingerprints: ["12:76:e5:bd:f0:94:9b:22:b5:40:66:e4:f1:61:6d:1e"]
+
+
       - attach_workspace:
           at: ~/
+
+      - run: 
+          name: Install AwsCLI
+          command: |
+            apk add --no-cache \
+            py3-pip \
+            && pip3 install --upgrade pip \
+            && pip3 install --no-cache-dir \
+            awscli \
+            && rm -rf /var/cache/apk/*
+
       - run:
-          name: Install dependencies pip and node 
+          name: Install dependencies 
           command: |
             apk add --update ansible nodejs npm tar gzip
-      - run:
-          name: Install Ansible 
-          command: |
-            apk add --update ansible 
-            apk add --upgrade bash ansible openssh-client
+            apk add --upgrade bash openssh-client
+   
    
       - run:
           name: prepare backend
@@ -292,9 +302,16 @@ jobs:
             npm run build
             cd ..
             tar -C backend -czvf artifact.tar.gz .
+
+      - destroy_environment
+   
+      - run:
+          name: deploy backend
+          command: |
+            export ANSIBLE_HOST_KEY_CHECKING=False
             cd .circleci/ansible
-            echo "Contents  of the inventory.txt file is -------"
             cat inventory.txt
+            pwd
             ansible-playbook -i inventory.txt deploy-backend.yml
 
       - destroy_environment
