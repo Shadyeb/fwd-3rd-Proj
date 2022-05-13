@@ -3,11 +3,6 @@ orbs:
   aws-cli: circleci/aws-cli@2.0.3
 commands:
 
-  install_awscli:
-    steps:
-      - run: install AWS-cli
-      - command: |
-       
 
   
   print_pipeline_id:
@@ -298,7 +293,7 @@ jobs:
           command: |
             apk --update --no-cache upgrade 
             apk add nodejs npm 
-            
+
       - run:
           name: Deploy backend
           command: |

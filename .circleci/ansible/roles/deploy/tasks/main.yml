@@ -1,8 +1,7 @@
 ---
 - name: Extract backend files
-  become: yes
+  become: true
   shell: |
-    cd ~/project
     tar -vxf artifact.tar.gz
  
 
