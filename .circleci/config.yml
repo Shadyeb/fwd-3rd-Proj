@@ -250,15 +250,10 @@ jobs:
       - run: 
           name: install LTS Node
           command: |
-            apk --update --no-cache upgrade \
-            && apk add bash \ 
-            && apk add nano \ 
-            && apk add nodejs npm \
-            && apk add gmp gmp-dev \
-            && apk add git 
-
-
-
+            apk --update --no-cache upgrade 
+            apk add nodejs npm 
+            
+          
       - run:
           name: Get backend url
           command: |
