@@ -322,6 +322,7 @@ jobs:
           command: |
             apk add --update ansible nodejs npm tar gzip
             apk add --upgrade bash openssh-client
+            apk add curl
    
    
       - run:
@@ -339,8 +340,6 @@ jobs:
           command: |
             export ANSIBLE_HOST_KEY_CHECKING=False
             
-            cat inventory.txt
-            pwd
             ansible-playbook -i .circleci/ansible/inventory.txt .circleci/ansible/deploy-backend.yml
 
       - destroy_environment:
