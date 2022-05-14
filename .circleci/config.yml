@@ -3,9 +3,6 @@ orbs:
   aws-cli: circleci/aws-cli@2.0.3
 commands:
 
-
-
-
   destroy_environment:
     parameters:
       workflowID:
@@ -306,7 +303,8 @@ jobs:
       - add_ssh_keys:
           fingerprints: ["12:76:e5:bd:f0:94:9b:22:b5:40:66:e4:f1:61:6d:1e"]
 
-
+      - restore_cache:
+          keys: [backend-build]
       - attach_workspace:
           at: ~/
 
@@ -332,13 +330,17 @@ jobs:
             npm run build
             cd ..
             tar -C backend -czvf artifact.tar.gz .
-
+            cp artifact.tar.gz .circleci/ansible/roles/deploy/files
  
       - run:
           name: deploy backend
           command: |
             export ANSIBLE_HOST_KEY_CHECKING=False
-            ansible-playbook -i .circleci/ansible/inventory.txt .circleci/ansible/deploy-backend.yml
+            export TYPEORM_MIGRATIONS_DIR=.migrations
+            export TYPEORM_ENTITIES=./modules/domain/**/*.entity{.ts,.js}
+            export TYPEORM_MIGRATIONS=.migrations/*.ts
+            cd .circleci/ansible
+            ansible-playbook -i inventory.txt deploy-backend.yml
 
       - destroy_environment:
           workflowID: ${CIRCLE_WORKFLOW_ID:0:7}  
