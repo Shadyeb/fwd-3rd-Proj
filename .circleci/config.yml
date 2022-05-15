@@ -53,7 +53,7 @@ commands:
             aws cloudformation delete-stack --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}
             aws s3 rm s3://udapeople-<<parameters.workflowID>> --recursive
 
-  revert-migrations:
+  revert_migrations:
     parameters:
       workflowID:
         type: string 
@@ -272,8 +272,8 @@ jobs:
       - destroy_environment:
           workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
 
-      - revert-migrations:
-          workflowID: ${CIRCLE_WORKFLOW_ID:0:7}    
+      - revert_migrations:
+          workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
 
 
   deploy-frontend:
@@ -318,8 +318,8 @@ jobs:
       - destroy_environment:
           workflowID: ${CIRCLE_WORKFLOW_ID:0:7}   
      
-      - revert-migrations:
-          workflowID: ${CIRCLE_WORKFLOW_ID:0:7}    
+      - revert_migrations:
+          workflowID: ${CIRCLE_WORKFLOW_ID:0:7}   
   
   deploy-backend:
     docker:
@@ -360,7 +360,8 @@ jobs:
             ansible-playbook -i inventory.txt deploy-backend.yml
       - destroy_environment:
           workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
-      - revert-migrations
+      - revert_migrations:
+          workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
 
  
 
@@ -402,7 +403,8 @@ jobs:
             fi
       - destroy_environment:
           workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
-      - revert-migrations
+      - revert_migrations:
+          workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
 
   cloudfront-update:
     docker:
