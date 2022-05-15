@@ -15,13 +15,13 @@ commands:
     description: "installing  aws-cli "
     steps:
       - run: 
-          name: "installing  aws-cli"
+          name: "install  aws-cli"
           command: |
             curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
             unzip awscliv2.zip
             sudo ./aws/install
   install_ansible:
-    description: "installing  Ansible on Ubuntu images"
+    description: "installing  Ansible "
     steps:
       - run: 
           name: "Install Ansible"
@@ -30,11 +30,12 @@ commands:
             sudo apt install software-properties-common -y
             sudo add-apt-repository --yes --update ppa:ansible/ansible
             sudo apt install ansible -y
-    install_nodejs:
-    description: "This command installs NodeJS on the docker image"
+
+  install_nodejs:
+    description: "installing nodejs"
     steps:
       - run:
-          name: "Installing node js"
+          name: "install node js"
           command: |
             curl -fsSL https://deb.nodesource.com/setup_13.x | sudo -E bash -
             sudo apt install -y nodejs
