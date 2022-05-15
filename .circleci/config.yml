@@ -2,14 +2,9 @@ version: 2.1
 orbs:
   aws-cli: circleci/aws-cli@2.0.3
 commands:
-  install_node:
-    description: "installing NodeJS "
-    steps:
-      - run:
-          name: "Installing node js"
-          command: |
-            curl -fsSL https://deb.nodesource.com/setup_13.x | sudo -E bash -
-            sudo apt install -y nodejs
+# some commands i will need  to install dep on base Images 
+
+#1- AWS CLI
   install_awscli:
     description: "installing  aws-cli "
     steps:
@@ -19,6 +14,7 @@ commands:
             curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
             unzip awscliv2.zip
             sudo ./aws/install
+#2- Ansible
   install_ansible:
     description: "installing  Ansible "
     steps:
@@ -29,7 +25,7 @@ commands:
             sudo apt install software-properties-common -y
             sudo add-apt-repository --yes --update ppa:ansible/ansible
             sudo apt install ansible -y
-
+#3- Nodejs
   install_nodejs:
     description: "installing nodejs"
     steps:
@@ -38,7 +34,7 @@ commands:
           command: |
             curl -fsSL https://deb.nodesource.com/setup_13.x | sudo -E bash -
             sudo apt install -y nodejs
-
+#4- Destroy my environment
   destroy_environment:
     parameters:
       workflowID:
@@ -51,7 +47,7 @@ commands:
             aws cloudformation delete-stack --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7} 
             aws cloudformation delete-stack --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}
             aws s3 rm s3://udapeople-<<parameters.workflowID>> --recursive
-
+#5- Revert Migrations 
   revert_migrations:
     parameters:
       workflowID:
@@ -90,7 +86,6 @@ jobs:
       - save_cache:
           paths: [frontend/node_modules]
           key: frontend-build
-
   test-frontend:
     docker:
       - image: circleci/node:13.8.0
@@ -121,7 +116,6 @@ jobs:
               npm audit --audit-level=critical
 
 #BACKEND
-
   Build-Backend:
     docker:
       - image: circleci/node:13.8.0
@@ -170,7 +164,8 @@ jobs:
               npm audit fix --force
               npm audit --audit-level=critical
 
-#CD Part
+# CD Part
+
   deploy-infrastructure:
     docker:
       - image: amazon/aws-cli
@@ -211,8 +206,6 @@ jobs:
 
       - destroy_environment:
           workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
-
-
   configure_infrastructure: 
     docker:
       - image: cimg/base:2022.04
@@ -237,7 +230,6 @@ jobs:
 
       - destroy_environment:
           workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
-  
   run-migrations:
     docker:
       - image: cimg/node:13.8.0
@@ -273,8 +265,6 @@ jobs:
 
       - revert_migrations:
           workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
-
-
   deploy-frontend:
     docker:
       - image: circleci/node:13.8.0
@@ -311,7 +301,6 @@ jobs:
      
       - revert_migrations:
           workflowID: ${CIRCLE_WORKFLOW_ID:0:7}   
-  
   deploy-backend:
     docker:
       - image: cimg/base:2022.04 
@@ -352,8 +341,7 @@ jobs:
       - revert_migrations:
           workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
 
- 
-
+# Smoke Test
   smoke-test:
     docker:
       - image: cimg/base:2022.04
@@ -394,7 +382,7 @@ jobs:
           workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
       - revert_migrations:
           workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
-
+# Change Cloudfront to the new Deply 
   cloudfront-update:
     docker:
       - image: amazon/aws-cli
@@ -429,7 +417,7 @@ jobs:
      
       - revert_migrations:
           workflowID: ${CIRCLE_WORKFLOW_ID:0:7}  
-
+# Clean up  un used resources to avoid extra costs
   cleanup:
     docker:
       - image: amazon/aws-cli
@@ -439,14 +427,14 @@ jobs:
           name: Get old stack workflow id
           command: |
             OldWorkflowID=$(curl --insecure  https://kvdb.io/9eWq6mr43bWdShCSd8khW5/old_workflow_id)
-            export stacks=$(aws cloudformation list-stacks --query "StackSummaries[*].StackName" \
-            --stack-status-filter CREATE_COMPLETE --no-paginate --output text)
-            echo ${stacks}
-            echo ${OldWorkflowID}
-            echo ${CIRCLE_WORKFLOW_ID:0:7}
+            echo OldWorkflowID: "${OldWorkflowID}"
+            echo CIRCLE_WORKFLOW_ID "${CIRCLE_WORKFLOW_ID:0:7}"
+            export STACKS=$(aws cloudformation list-stacks --query "StackSummaries[*].StackName" \
+                        --stack-status-filter CREATE_COMPLETE --no-paginate --output text)
+            echo Stacks: "${STACKS}"
               if [[ "${CIRCLE_WORKFLOW_ID:0:7}" != "${OldWorkflowID}" ]]
               then
-                if [[ "${stacks}"  != 0 ]]
+                if [[ "${STACKS}"  != 0 ]]
                 then
                   echo "cleanup is required"
                   aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive
@@ -455,9 +443,6 @@ jobs:
                 else
                   echo 'cleanup is not applicable'
                 fi
-              else  
-                echo 'cleanup is not applicable'
-              fi
 
 workflows:
   default:
