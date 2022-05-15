@@ -23,6 +23,7 @@
     - setup:
   
   roles:
+    - configure-prometheus-node-exporter
     - configure-server
 
   # pre_tasks:
