@@ -1,31 +1,25 @@
 
 ---
-- name: "Copy BE compressed  file"
-  become: true
+- name: "Copy Backend artifact"
   copy:
     src: artifact.tar.gz
     dest: /home/ubuntu
 
-- name: "extract  BE  artifact "
+- name: "extract  backend artifact"
   ansible.builtin.shell: tar -xzf artifact.tar.gz
   args:
     chdir: /home/ubuntu
 
-- name: "install node"
-  become: true
-  shell : |
+- name: "installing node"
+  shell: |
       cd /home/ubuntu/backend
-      npm install
-
-- name: "run server"
-  become: true
-  shell : |
+      npm i
+- name: "excuting with pm"
+  shell: |
       cd /home/ubuntu/backend/dist
       pm2 stop default
       pm2 start main.js
-
-- name: "pm2 path"
+- name: "pm2 server start"
   become: true
-  shell : |
+  shell: |
     env PATH=$PATH:/usr/local/bin pm2 startup systemd -u ubuntu --hp /home/ubuntu
-
