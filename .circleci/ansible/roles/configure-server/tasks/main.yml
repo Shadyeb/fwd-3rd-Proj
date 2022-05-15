@@ -1,53 +1,50 @@
 ---
-- name: "update apt"
+
+- name: "update apt packages"
   become: true
+  become_method: sudo
   apt:
     update_cache: yes
 
-- name: "upgrade apt packages"
+- name: "upgrade packages."
   become: true
   apt:
     upgrade: "yes"
 
-- name: "Remove packages that are no longer used"
+- name: "Remove dependencies that are no longer required"
   become: true
   apt:
     autoremove: yes
 
-- name: "install dependencies."
-  become: true
-  apt:
-    name: ["tar", "unzip", "curl", "git"]
-    state: latest
-    update_cache: yes
-
-- name: "install nodejs"
+- name: "installing nodejs"
   become: true
   apt:
     name: ["nodejs"]
     state: latest
     update_cache: yes
 
-- name: "install npm"
+- name: "installing npm"
   become: true
   apt:
     name: ["npm"]
     state: latest
-    update_cache: yes
+    update_cache: yes 
 
-- name: "install n node manager"
+- name: "install n node version manager"
   become: true
-  npm: 
-    name: n  
+  npm:
+    name: n
     global: yes
-    production: yes 
+    production: yes
 
-- name: "install node13.8"
+- name: "install nodejs 13.8.0"
   become: true
-  shell: |
-    n 13.8.0
-    
+  shell: n 13.8.0
+
 - name: "install pm2"
   become: true
-  shell: |
-    npm i -g pm2  
+  npm:
+    name: pm2
+    global: yes
+    production: yes
+    state: present
