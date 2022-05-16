@@ -1,5 +1,5 @@
- Github Repo : 
+ 1- Github Repo : 
  https://github.com/Shadyeb/fwd-3rd-Proj
  
- public S3 bucket : 
-http://udapeople-58ad442.s3.us-east-2.amazonaws.com/index.html#/employees
+2- public S3 bucket : 
+http://udapeople-3178253.s3-website.us-east-2.amazonaws.com/#/employees
