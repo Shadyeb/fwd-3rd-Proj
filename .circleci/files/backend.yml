@@ -23,9 +23,14 @@ Resources:
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: 0
-          ToPort: 65535
+          ToPort: 9100
           CidrIp: 0.0.0.0/0
 
+
+  BackendEIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      InstanceId: !Ref EC2Instance
 
   EC2Instance:
     Type: AWS::EC2::Instance
@@ -38,3 +43,4 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub backend-${ID}
+
